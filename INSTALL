@@ -1,0 +1,6 @@
+rsync-backup can be run from any directory.  If you want to make it
+available for all users, execute the following commands as root (or
+using sudo):
+
+  install rsync-backup /usr/local/bin
+  install -m 644 rsync-backup.1 /usr/local/man/man1
