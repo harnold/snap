@@ -1,0 +1,303 @@
+#!/usr/bin/env bash
+
+# rsync-backup
+#
+# Copyright 2010 Holger Arnold.
+#
+# This program may be modified and redistributed under the terms of the GNU
+# General Public License, version 2.  See the accompanying LICENSE file for
+# details.
+
+shopt -s extglob
+
+prg=$(basename "$0")
+ver=0.3
+
+rsync=/usr/bin/rsync
+rsync_default_opts=("--archive")
+
+print_version () {
+    echo rsync-backup version $ver
+}
+
+print_usage () {
+    cat <<EOF
+Usage: rsync-backup [<option> ...] <source> <archive>
+  or:  rsync-backup [<option> ...] <profile>
+
+Options:
+  -x, --exclude=<pattern>      exclude files matching <pattern>
+  -l, --link=<dir>             link to files in <dir> when unchanged
+  -f, --full-copy              create a full (non-incremental) copy
+  -c, --checksum               compute checksums to find changed files
+  -H, --hardlinks              preserve hard links
+  -A, --acls                   preserve access control lists
+  -X, --xattrs                 preserve extended attributes
+  -v, --verbose                print information about transferred files
+  -i, --interactive            ask for confirmation
+  -n, --non-interactive        do not ask for confirmation
+  -V, --version                print version information
+  -h, --help                   show this help
+
+See the rsync-backup manual for full documentation.
+EOF
+}
+
+print_help () {
+    print_usage
+}
+
+# Print error message and exit with error code 1.
+#
+# error <message>
+
+error () {
+    echo "Error: $1" >&2
+    exit 1
+}
+
+# Read a single line of a config file.
+#
+# read_profile_line <line>
+#
+# Uses:     profile_source
+# Modifies: source_dir, archive_dir, exclude_pats, link_dirs, checksum,
+#           hardlinks, acls, xattrs
+
+read_profile_line () {
+
+    local name value opts opt
+
+    # Remove all whitespace and convert to lower case.
+
+    name="${1%%=*}"
+    name="${name//[[:space:]]/}"
+    name="${name,,}"
+
+    # Remove leading and trailing whitespace (requires extglob).
+
+    value="${1#*=}"
+    value="${value##*([[:space:]])}"
+    value="${value%%*([[:space:]])}"
+
+    case "$name" in
+        source)
+            [[ -z $source_dir ]] ||
+                error "'$profile_source' contains multiple source paths."
+            source_dir="$value";;
+        archive)
+            [[ -z $archive_dir ]] ||
+                error "'$profile_source' contains multiple archive paths."
+            archive_dir="$value";;
+        exclude)
+            exclude_pats+=("$value");;
+        link)
+            link_dirs+=("$value");;
+        options)
+            IFS=$' \t,' opts=($value)
+            for opt in "${opts[@]}"; do
+                case "$opt" in
+                    full-copy)      full_copy=1;;
+                    checksum)       checksum=1;;
+                    hardlinks)      hardlinks=1;;
+                    acls)           acls=1;;
+                    xattrs)         xattrs=1;;
+                    "") ;;
+                    *) error "invalid option '$opt' in '$profile_source'.";;
+                esac
+            done;;
+        "") ;;
+        *) error "invalid keyword '$name' in '$profile_source'.";;
+    esac
+}
+
+# Read a profile from a config file.
+#
+# Uses:     profile_source
+# Modifies: source_dir, archive_dir, exclude_pats, link_dirs, checksum,
+#           hardlinks, acls, xattrs
+
+read_profile () {
+
+    local line
+
+    while read -r line; do
+        [[ $line != \#* ]] && read_profile_line "$line"
+    done < "$profile_source"
+
+    [[ $line && $line != \#* ]] && read_profile_line "$line"
+
+    [[ $source_dir  ]] || error "'$profile_source' contains no source path."
+    [[ $archive_dir ]] || error "'$profile_source' contains no archive path."
+}
+
+# Build rsync arguments from environment and run rsync.
+#
+# Uses:     link_dirs, exclude_pats, verbose, checksum, hardlinks, acls,
+#           xattrs, source_dir, dest_dir
+# Modifies: rsync_opts
+
+do_rsync () {
+
+    # Add link directories to rsync options.
+
+    for dir in "${link_dirs[@]}"; do
+        rsync_opts+=("--link-dest=$dir")
+    done
+
+    # Add exclude patterns to rsync options.
+
+    for pat in "${exclude_pats[@]}"; do
+        rsync_opts+=("--exclude=$pat")
+    done
+
+    # Add remaining rsync options.
+
+    (( verbose ))   && rsync_opts+=("--verbose")
+    (( checksum ))  && rsync_opts+=("--checksum")
+    (( hardlinks )) && rsync_opts+=("--hard-links")
+    (( acls ))      && rsync_opts+=("--acls")
+    (( xattrs ))    && rsync_opts+=("--xattrs")
+
+    # Finally, let rsync do the hard work...
+
+    $rsync "${rsync_default_opts[@]}" "${rsync_opts[@]}" \
+           "$source_dir" "$dest_dir"
+}
+
+# Set directories where profiles are searched.
+
+system_config_dir=/etc/"$prg"
+
+if [[ $XDG_CONFIG_HOME ]]; then
+    user_config_dir="$XDG_CONFIG_HOME"/"$prg"
+else
+    user_config_dir="$HOME"/.config/"$prg"
+fi
+
+config_dirs=("$user_config_dir" "$system_config_dir")
+
+# Extract command-line arguments.
+
+(( $# > 0 )) || { print_usage; exit; }
+
+while (( $# > 0 )); do
+    case "$1" in
+        -x|--exclude)          exclude_pats+=("$2"); shift;;
+        --exclude=*)           exclude_pats+=("${1#*=}");;
+        -f|--full-backup)      full_backup=1;;
+        -l|--link)             link_dirs+=("$2"); shift;;
+        --link=*)              link_dirs+=("${1#*=}");;
+        -c|--checksum)         checksum=1;;
+        -H|--hardlinks)        hardlinks=1;;
+        -A|--acls)             acls=1;;
+        -X|--xattrs)           xattrs=1;;
+        -v|--verbose)          verbose=1;;
+        -i|--interactive)      interactive=1;;
+        -n|--non-interactive)  interactive=0;;
+        -V|--version)          print_version; exit;;
+        -h|--help)             print_help; exit;;
+        --debug)               debug=1;;
+        -*)                    print_usage; exit 1;;
+        *)                     break;;
+    esac
+    shift
+done
+
+(( debug )) && set +x
+
+# Read configuration file when called with single argument.
+
+if (( $# == 1 )); then
+
+    [[ $interactive ]] || interactive=0
+
+    profile="$1"
+    for dir in "${config_dirs[@]}"; do
+        profile_source="$dir"/"$1".conf
+        if [[ -f $profile_source ]]; then
+            read_profile
+            profile_found=1
+            break
+        fi
+    done
+
+    (( $profile_found )) || error "could not find profile '$profile'."
+
+elif (( $# == 2 )); then
+
+    [[ $interactive ]] || interactive=1
+
+    source_dir="$1"
+    archive_dir="$2"
+
+else
+    print_usage
+    exit 1
+fi
+
+# Check source and archive directories.
+
+archive_dir="$(readlink -e -n $archive_dir)" ||
+    error "archive path is invalid."
+
+[[ -d $source_dir  ]] || error "source path '$source_dir' is not a directory."
+[[ -d $archive_dir ]] || error "archive path '$archive_dir' is not a directory."
+
+# If no full backup is requested and no link directory is specified,
+# try to link to the previous snapshot.
+
+if (( ! $full_backup )) && [[ ! $link_dirs ]]; then
+    if [[ -f $archive_dir/latest-snapshot ]]; then
+        dir="$archive_dir"/$(< "$archive_dir"/latest-snapshot)
+        [[ -d $dir ]] && link_dirs+=("$dir")
+    fi
+fi
+
+# Create snapshot id and set destination directory.
+
+snapshot_id="$(date +%Y-%m-%d--%H-%M-%S)"
+
+count=0
+while [[ -e $archive_dir/$snapshot_id ]]; do
+    (( ++count <= 3 )) || error "could not create snapshot id."
+    sleep 2; snapshot_id="$(date +%Y-%m-%d--%H-%M-%S)"
+done
+
+dest_dir="$archive_dir"/"$snapshot_id"
+
+# If interactive mode is set, print configuration and ask for confirmation.
+
+if (( $interactive )); then
+
+    echo " Source: $source_dir"
+    echo "Archive: $archive_dir"
+
+    for dir in "${link_dirs[@]}"; do
+        echo "   Link: $dir"
+    done
+
+    for pat in "${exclude_pats[@]}"; do
+        echo "Exclude: $pat"
+    done
+
+    echo -n "Options: "
+    (( full_backup )) && echo -n "full-backup "
+    (( checksum ))    && echo -n "checksum "
+    (( hardlinks ))   && echo -n "hardlinks "
+    (( acls ))        && echo -n "acls "
+    (( xattrs ))      && echo -n "xattrs "
+    echo
+
+    read -s -n1 -p "Start backup now (Y/n)?" confirm; echo
+
+    [[ $confirm == "Y" ]] || { exit; }
+fi
+
+# No file should have been changed up to this point.
+
+mkdir "$dest_dir" 2>/dev/null || error "could not create snapshot directory."
+do_rsync                      || error "rsync failed."
+echo -n "$snapshot_id" > "$archive_dir"/latest-snapshot
+
+echo "Backup completed."

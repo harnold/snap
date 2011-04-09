@@ -1,0 +1,9 @@
+* Version 0.3
+
+  - A new option -f/--full-copy has been added.  When this option is used,
+    rsync-backup does not scan the archive directory for previous backups.
+
+* Version 0.2
+
+  - The name format of the backup directories has changed to <date>--<time>,
+    (YYYY-MM-DD--HH-MM-SS, to be precise), without appended UID.
