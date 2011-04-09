@@ -222,7 +222,7 @@ if (( $# == 1 )); then
         fi
     done
 
-    (( $profile_found )) || error "could not find profile '$profile'."
+    (( profile_found )) || error "could not find profile '$profile'."
 
 elif (( $# == 2 )); then
 
@@ -247,7 +247,7 @@ archive_dir="$(readlink -e -n $archive_dir)" ||
 # If no full backup is requested and no link directory is specified,
 # try to link to the previous snapshot.
 
-if (( ! $full_backup )) && [[ ! $link_dirs ]]; then
+if (( ! full_backup )) && [[ ! $link_dirs ]]; then
     if [[ -f $archive_dir/latest-snapshot ]]; then
         dir="$archive_dir"/$(< "$archive_dir"/latest-snapshot)
         [[ -d $dir ]] && link_dirs+=("$dir")
@@ -268,7 +268,7 @@ dest_dir="$archive_dir"/"$snapshot_id"
 
 # If interactive mode is set, print configuration and ask for confirmation.
 
-if (( $interactive )); then
+if (( interactive )); then
 
     echo " Source: $source_dir"
     echo "Archive: $archive_dir"
