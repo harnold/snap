@@ -226,9 +226,11 @@ if (( $# == 1 )); then
     [[ $interactive ]] || interactive=0
 
     profile="$1"
+    profile_found=
+
     for dir in "${config_dirs[@]}"; do
         profile_source="$dir"/"$1".conf
-        if [[ -f $profile_source ]]; then
+        if [[ -f $profile_source && -r $profile_source ]]; then
             read_profile
             profile_found=1
             break
