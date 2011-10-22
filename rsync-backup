@@ -185,7 +185,7 @@ while (( $# > 0 )); do
     case "$1" in
         -x|--exclude)          exclude_pats+=("$2"); shift;;
         --exclude=*)           exclude_pats+=("${1#*=}");;
-        -f|--full-backup)      full_backup=1;;
+        -f|--full-copy)        full_copy=1;;
         -l|--link)             link_dirs+=("$2"); shift;;
         --link=*)              link_dirs+=("${1#*=}");;
         -c|--checksum)         checksum=1;;
@@ -244,10 +244,10 @@ archive_dir="$(readlink -e -n $archive_dir)" ||
 [[ -d $source_dir  ]] || error "source path '$source_dir' is not a directory."
 [[ -d $archive_dir ]] || error "archive path '$archive_dir' is not a directory."
 
-# If no full backup is requested and no link directory is specified,
+# If no full copy is requested and no link directory is specified,
 # try to link to the previous snapshot.
 
-if (( ! full_backup )) && [[ ! $link_dirs ]]; then
+if (( ! full_copy )) && [[ ! $link_dirs ]]; then
     if [[ -f $archive_dir/latest-snapshot ]]; then
         dir="$archive_dir"/$(< "$archive_dir"/latest-snapshot)
         [[ -d $dir ]] && link_dirs+=("$dir")
@@ -282,7 +282,7 @@ if (( interactive )); then
     done
 
     echo -n "Options: "
-    (( full_backup )) && echo -n "full-backup "
+    (( full_copy ))   && echo -n "full-copy "
     (( checksum ))    && echo -n "checksum "
     (( hardlinks ))   && echo -n "hardlinks "
     (( acls ))        && echo -n "acls "
