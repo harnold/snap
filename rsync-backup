@@ -15,6 +15,19 @@ ver=0.3
 
 rsync=/usr/bin/rsync
 rsync_default_opts=("--archive")
+rsync_opts=()
+source_dir=
+archive_dir=
+link_dirs=()
+exclude_pats=()
+hardlinks=0
+acls=0
+xattrs=0
+checksum=0
+full_copy=0
+verbose=0
+interactive=
+debug=0
 
 print_version () {
     echo rsync-backup version $ver
