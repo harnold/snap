@@ -166,11 +166,11 @@ do_rsync () {
 
     # Add remaining rsync options.
 
-    (( verbose ))   && rsync_opts+=("--verbose")
-    (( checksum ))  && rsync_opts+=("--checksum")
-    (( hardlinks )) && rsync_opts+=("--hard-links")
-    (( acls ))      && rsync_opts+=("--acls")
-    (( xattrs ))    && rsync_opts+=("--xattrs")
+    [[ $verbose = 1 ]]   && rsync_opts+=("--verbose")
+    [[ $checksum = 1 ]]  && rsync_opts+=("--checksum")
+    [[ $hardlinks = 1 ]] && rsync_opts+=("--hard-links")
+    [[ $acls = 1 ]]      && rsync_opts+=("--acls")
+    [[ $xattrs = 1 ]]    && rsync_opts+=("--xattrs")
 
     # Finally, let rsync do the hard work...
 
@@ -192,9 +192,9 @@ config_dirs=("$user_config_dir" "$system_config_dir")
 
 # Extract command-line arguments.
 
-(( $# > 0 )) || { print_usage; exit; }
+[[ $# -gt 0 ]] || { print_usage; exit; }
 
-while (( $# > 0 )); do
+while [[ $1 == -* ]]; do
     case "$1" in
         -x|--exclude)          exclude_pats+=("$2"); shift;;
         --exclude=*)           exclude_pats+=("${1#*=}");;
@@ -211,17 +211,17 @@ while (( $# > 0 )); do
         -V|--version)          print_version; exit;;
         -h|--help)             print_help; exit;;
         --debug)               debug=1;;
-        -*)                    print_usage; exit 1;;
-        *)                     break;;
+        --)                    shift; break;;
+        -*)                    error "invalid option '$1'.";;
     esac
     shift
 done
 
-(( debug )) && set +x
+[[ $debug = 1 ]] && set -x
 
 # Read configuration file when called with single argument.
 
-if (( $# == 1 )); then
+if [[ $# -eq 1 ]]; then
 
     [[ $interactive ]] || interactive=0
 
@@ -237,9 +237,9 @@ if (( $# == 1 )); then
         fi
     done
 
-    (( profile_found )) || error "could not find profile '$profile'."
+    [[ $profile_found ]] || error "could not find profile '$profile'."
 
-elif (( $# == 2 )); then
+elif [[ $# -eq 2 ]]; then
 
     [[ $interactive ]] || interactive=1
 
@@ -283,7 +283,7 @@ dest_dir="$archive_dir"/"$snapshot_id"
 
 # If interactive mode is set, print configuration and ask for confirmation.
 
-if (( interactive )); then
+if [[ $interactive = 1 ]]; then
 
     echo " Source: $source_dir"
     echo "Archive: $archive_dir"
@@ -297,11 +297,11 @@ if (( interactive )); then
     done
 
     echo -n "Options: "
-    (( full_copy ))   && echo -n "full-copy "
-    (( checksum ))    && echo -n "checksum "
-    (( hardlinks ))   && echo -n "hardlinks "
-    (( acls ))        && echo -n "acls "
-    (( xattrs ))      && echo -n "xattrs "
+    [[ $full_copy = 1 ]] && echo -n "full-copy "
+    [[ $checksum = 1 ]]  && echo -n "checksum "
+    [[ $hardlinks = 1 ]] && echo -n "hardlinks "
+    [[ $acls = 1 ]]      && echo -n "acls "
+    [[ $xattrs = 1 ]]    && echo -n "xattrs "
     echo
 
     read -p "Start backup now (y/n)? " confirm; echo
