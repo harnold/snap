@@ -11,7 +11,7 @@
 shopt -s extglob
 
 prg=$(basename "$0")
-ver=0.3
+ver=0.3.2
 
 rsync=/usr/bin/rsync
 rsync_default_opts=("--archive")

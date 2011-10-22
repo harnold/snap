@@ -1,9 +1,39 @@
-* Version 0.3
+Changes in rsync-backup
+=======================
 
-  - A new option -f/--full-copy has been added.  When this option is used,
-    rsync-backup does not scan the archive directory for previous backups.
 
-* Version 0.2
+Version 0.3.2 (2011-10-23)
+--------------------------
 
-  - The name format of the backup directories has changed to <date>--<time>,
-    (YYYY-MM-DD--HH-MM-SS, to be precise), without appended UID.
+Changes:
+
+ * When a configuration file cannot be read, rsync-backup no longer fails but
+   works as if the file would not exist.
+
+ * In interactive mode, you must press "Enter" to enter your answer to the
+   confirmation request.
+
+Bugs fixed:
+
+ * The "-f/--full-copy" option did not work.
+
+ * rsync-backup could be confused by setting certain environment variables.
+
+
+0.3.1 (2011-04-10)
+------------------
+
+New features:
+
+ * New option "-f/--full-copy" for doing non-incremental backups.  This option
+   prevents rsync-backup from scanning the archive directory for previous
+   backups.
+
+
+0.2 (2011-04-05)
+----------------
+
+Changes:
+
+ * The name format of the backup directories has changed to <date>--<time>,
+   (YYYY-MM-DD--HH-MM-SS, to be precise), without appended UID.
