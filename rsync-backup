@@ -69,6 +69,14 @@ error () {
     exit 1
 }
 
+# Print warning message without exiting.
+#
+# warning <message>
+
+warning () {
+    echo "Warning: $1" >&2
+}
+
 # Read a single line of a config file.
 #
 # read_profile_line <line>
@@ -262,8 +270,9 @@ archive_dir="$(readlink -e -n $archive_dir)" ||
 # If no full copy is requested and no link directory is specified,
 # try to link to the previous snapshot.
 
-if (( ! full_copy )) && [[ ! $link_dirs ]]; then
-    if [[ -f $archive_dir/latest-snapshot ]]; then
+if [[ $full_copy != 1 && ! $link_dirs ]]; then
+    if [[ -f $archive_dir/latest-snapshot &&
+          -r $archive_dir/latest-snapshot ]]; then
         dir="$archive_dir"/$(< "$archive_dir"/latest-snapshot)
         [[ -d $dir ]] && link_dirs+=("$dir")
     fi
@@ -313,6 +322,8 @@ fi
 
 mkdir "$dest_dir" 2>/dev/null || error "could not create snapshot directory."
 do_rsync                      || error "rsync failed."
-echo -n "$snapshot_id" > "$archive_dir"/latest-snapshot
 
 echo "Backup completed."
+
+echo -n "$snapshot_id" > "$archive_dir"/latest-snapshot ||
+    warning "could not write to '$archive_dir/latest-snapshot'."
