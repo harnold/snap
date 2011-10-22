@@ -304,9 +304,9 @@ if (( interactive )); then
     (( xattrs ))      && echo -n "xattrs "
     echo
 
-    read -s -n1 -p "Start backup now (Y/n)?" confirm; echo
+    read -p "Start backup now (y/n)? " confirm; echo
 
-    [[ $confirm == "Y" ]] || { exit; }
+    [[ $confirm == [Yy] || $confirm == [Yy]es ]] || exit;
 fi
 
 # No file should have been changed up to this point.
