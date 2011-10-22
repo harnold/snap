@@ -118,11 +118,11 @@ read_profile_line () {
             IFS=$' \t,' opts=($value)
             for opt in "${opts[@]}"; do
                 case "$opt" in
-                    full-copy)      full_copy=1;;
-                    checksum)       checksum=1;;
-                    hardlinks)      hardlinks=1;;
-                    acls)           acls=1;;
-                    xattrs)         xattrs=1;;
+                    full-copy)  full_copy=1;;
+                    checksum)   checksum=1;;
+                    hardlinks)  hardlinks=1;;
+                    acls)       acls=1;;
+                    xattrs)     xattrs=1;;
                     "") ;;
                     *) error "invalid option '$opt' in '$profile_source'.";;
                 esac
@@ -148,7 +148,7 @@ read_profile () {
 
     [[ $line && $line != \#* ]] && read_profile_line "$line"
 
-    [[ $source_dir  ]] || error "'$profile_source' contains no source path."
+    [[ $source_dir ]]  || error "'$profile_source' contains no source path."
     [[ $archive_dir ]] || error "'$profile_source' contains no archive path."
 }
 
@@ -320,7 +320,7 @@ fi
 
 # No file should have been changed up to this point.
 
-mkdir "$dest_dir" 2>/dev/null || error "could not create snapshot directory."
+mkdir "$dest_dir" 2>/dev/null || error "could not create backup directory."
 do_rsync                      || error "rsync failed."
 
 echo "Backup completed."
