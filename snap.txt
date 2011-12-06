@@ -1,0 +1,248 @@
+snap(1)
+=======
+:doctype:     manpage
+:man source:  snap
+:man version: 0.3
+:man manual:  snap
+
+Name
+----
+snap - a simple backup tool
+
+Synopsis
+--------
+[verse]
+*snap* ['<option>' ...] '<source>' '<archive>'
+*snap* ['<option>' ...] '<profile>'
+
+When the second form is used, the configuration is read from the file
+'<profile>.conf', which must be stored in one of the configuration
+directories.  See the ``'Profiles''' section for details.
+
+Description
+-----------
+*snap* is a simple backup tool, which uses http://rsync.samba.org[*rsync*] for
+its operation.  Unlike backups created by other backup programs, every backup
+created by *snap* is a full copy of the files and directories under the source
+directory; files that are unmodified between subsequent backups are created as
+hard links.  Backups are therefore completely transparent and can be explored
+and restored using normal file commands.
+
+When running *snap*, you must specify at least a source directory and an
+archive directory.  Additionally, you can specify files and directories that
+are to be excluded from the backup.  Each backup is stored in a new directory
+inside the archive directory, where the name of the backup directory has the
+form '<date>--<time>', with '<date>' and '<time>' being the date and time of
+the moment when the backup was started.  By default, the backup preserves
+symbolic links, permissions, modification times, and ownership.  Optionally,
+hard links, access control lists, and extended attributes can be preserved.
+
+Options
+-------
+
+*-x* '<pattern>', *--exclude*='<pattern>'::
+    Exclude files and directories matching '<pattern>' from the backup.  See
+    the section ``'Include/Exclude Pattern Rules''' in the
+    http://rsync.samba.org/ftp/rsync/rsync.html[*rsync*(1) manual] for details
+    on the pattern syntax.
+
+*-l* '<dir>', *--link*='<dir>'::
+    Link to files in '<dir>' when they are unchanged.  Before a file is copied
+    to the archive, *snap* tests whether one of the directories specified
+    using this option contains a file with identical name, relative path,
+    attributes, and contents.  If it finds such a file, *snap* creates a hard
+    link to this file instead of an actual copy.  This works only if '<dir>'
+    is in the same file system as the archive directory and if this file
+    system supports hard links.
++
+By default, *snap* tries to link to the latest successful backup in the
+archive directory.  When this option is used, however, *snap* does _not_ scan
+the archive directory for previous backups.
+
+*-f*, *--full-copy*::
+    Create a full (non-incremental) copy of the source directory.  When this
+    option is used, *snap* does not scan the archive directory for previous
+    backups.  It is still possible to create links to previous backups using
+    the *-l*/*--link* option.
+
+*-c*, *--checksum*::
+    Compute checksums to find changed files.  By default, *snap* determines
+    whether a file has changed since the last backup by comparing file sizes
+    and modification times, which should be safe in normal cases.  With this
+    option, *snap* computes a checksum for each file, which is safer, but
+    slows backups down significantly.
+
+*-H*, *--hardlinks*::
+    Preserve hard links in the backup.  With this option, *snap* hard-links
+    files that are hard-linked in the source directory also in the archive
+    directory.  This option is disabled by default because finding hard-linked
+    files can be an expensive operation.  See the
+    http://rsync.samba.org/ftp/rsync/rsync.html[*rsync*(1) manual] for details
+    on this option.
+
+*-A*, *--acls*::
+    Preserve access control lists in the backup.  See the
+    http://rsync.samba.org/ftp/rsync/rsync.html[*rsync*(1) manual] for details
+    on this option.
+
+*-X*, *--xattr*::
+    Preserve extended attributes in the backup.  See the
+    http://rsync.samba.org/ftp/rsync/rsync.html[*rsync*(1) manual] for details
+    on this option.
+
+*-v*, *--verbose*::
+    Print information about transferred files.
+
+*-i*, *--interactive*::
+    Ask for confirmation before starting the backup.  This is the default when
+    the complete configuration is specified on the command-line.
+
+*-n*, *--non-interactive*::
+    Do not ask for confirmation before starting the backup.  This is the
+    default when part of the configuration is read from a file.
+
+*-V*, *--version*::
+    Print version information and exit.
+
+*-h*, *--help*::
+    Show usage information and exit.
+
+Profiles
+--------
+When doing regular backups, it is convenient to store the configuration in a
+file.  Such a predefined configuration is called a _profile_ and must be
+stored in a file with extension `'.conf''.
+
+*snap* searches for system-wide profiles in '/etc/snap' and for user profiles
+in '$HOME/$XDG_USER_DIR/snap' (which defaults to '$HOME/.config/snap' when
+'XDG_USER_DIR' is not set).  A user profile takes precedence over a
+system-wide profile of the same name.  The options specified in the profile
+are combined with additional options specified on the command line.
+
+Configuration files are read line-by-line.  Empty lines and lines starting
+with *#* are ignored.  All other lines must contain one of the following
+elements:
+
+*Source* = '<source>'::
+    Defines a source path.  This element is equivalent to the '<source>'
+    command-line argument.
+
+*Archive* = '<archive>'::
+    Defines an archive path.  This element is equivalent to the '<archive>'
+    command-line argument.
+
+*Exclude* = '<pattern>'::
+    Adds an exclude pattern.  This element is equivalent to the *--exclude*
+    command-line option.  Note that patterns must not be quoted in
+    configuration files.
+
+*Link* = '<dir>'::
+    Adds a link directory.  This element is equivalent to the *--link*
+    command-line option.
+
+*Option* = ( *full-copy* | *checksum* | *hardlinks* | *acls* | *xattrs* ) ...::
+    Sets some options.  Each option is equivalent to the command-line option
+    of the same name.  The options must be separated by commas or spaces.
+
+The case of the keywords left to the *=* is not significant; additional spaces
+around keywords and values are ignored.  A configuration file must contain
+exactly one *Source* element and exactly one *Archive* element.
+
+Exit Status
+-----------
+*0*:: Success
+*1*:: Failure
+
+Environment
+-----------
+'HOME'::
+    Used to locate user profiles.
+
+'XDG_USER_DIR'::
+    Used to locate user profiles.  When 'XDG_USER_DIR' is not set, *snap*
+    assumes its default value '$HOME/.config'.
+
+Files
+-----
+*snap* searches for profiles in the following locations:
+
+'/etc/snap'::
+    The location for system-wide profiles.
+
+'$HOME/$XDG_USER_DIR/snap'::
+    The location for user profiles.  When 'XDG_USER_DIR' is not set, *snap*
+    searches for user profiles in '$HOME/.config/snap'.
+
+Notes
+-----
+The backup includes the source directory only if '<source>' does not contain a
+trailing slash; otherwise, the backup includes only the _contents_ of the
+source directory.  In other words,
+----
+snap /home/user /mnt/backup/user
+----
+creates a backup of all files and directories under '/home/user' in
+'/mnt/backup/user/<backupdir>/user', where '<backupdir>' is the backup
+directory.  In contrast,
+----
+snap /home/user/ /mnt/backup
+----
+creates the backup directly in '/mnt/backup/user/<backupdir>'.
+
+Limitations
+-----------
+The file system that contains the archive directory must support hard links
+for *snap* to be able to store subsequent backups efficiently.  Without hard
+links, *snap* has to perform an actual copy of all files--even the unmodified
+ones--from the source directory.  This can require much more time and disk
+space than on a file system which supports hard links.
+
+*snap* does not preserve file attributes which are not supported by the file
+system that contains the archive directory.  Therefore it is not a good idea
+to make a backup of an Ext4 file system on a FAT-formatted USB drive (but
+using FAT is not a good idea anyway).
+
+Although *rsync* is able to copy directly between remote locations, the
+current version of *snap* requires '<source>' and '<archive>' to be mounted
+directories.
+
+Example
+-------
+The following command creates a backup of the home directory of user 'alice'
+in '/mnt/backup/alice'.  Files in '.cache', '.thumbnails', and the Firefox and
+Thunderbird caches are excluded from the backup; extended file attributes as
+well as ACLs are preserved:
+----
+snap --exclude="/.cache/" \
+     --exclude="/.thumbnails/" \
+     --exclude="/.mozilla/firefox/*/Cache/" \
+     --exclude="/.thunderbird/*/Cache/"
+     --xattrs --acls \
+     /home/alice \
+     /mnt/backup/alice
+----
+To store this setup in a profile, create a file 'alice.conf' which contains
+the following lines:
+----
+Source  = /home/alice
+Archive = /mnt/backup/alice
+Exclude = /.cache/
+Exclude = /.thumbnails/
+Exclude = /.mozilla/firefox/*/Cache/
+Exclude = /.thunderbird/*/Cache/
+Options = xattrs acls
+----
+Copy this file to '/home/alice/.config/snap' (if you are user 'alice') or to
+'/etc/snap' (if you are the system administrator).  The following command then
+creates a backup using the profile 'alice':
+----
+snap alice
+----
+
+Author
+------
+*snap* has been written by Holger Arnold.
+
+See Also
+--------
+http://rsync.samba.org/ftp/rsync/rsync.html[*rsync*(1)]

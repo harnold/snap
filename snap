@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-# rsync-backup
+# snap: a simple backup tool
 #
-# Copyright 2010 Holger Arnold.
+# Copyright 2010, 2011 Holger Arnold.
 #
-# This program may be modified and redistributed under the terms of the GNU
-# General Public License, version 2.  See the accompanying LICENSE file for
-# details.
+# This program may be modified and redistributed under the terms of the
+# GNU General Public License, version 2.  See the accompanying LICENSE
+# file for details.
 
 shopt -s extglob
 
@@ -30,13 +30,13 @@ interactive=
 debug=0
 
 print_version () {
-    echo rsync-backup version $ver
+    echo $prg version $ver
 }
 
 print_usage () {
     cat <<EOF
-Usage: rsync-backup [<option> ...] <source> <archive>
-  or:  rsync-backup [<option> ...] <profile>
+Usage: $prg [<option> ...] <source> <archive>
+  or:  $prg [<option> ...] <profile>
 
 Options:
   -x, --exclude=<pattern>      exclude files matching <pattern>
@@ -52,7 +52,7 @@ Options:
   -V, --version                print version information
   -h, --help                   show this help
 
-See the rsync-backup manual for full documentation.
+See the $prg manual for full documentation.
 EOF
 }
 
@@ -313,17 +313,17 @@ if [[ $interactive = 1 ]]; then
     [[ $xattrs = 1 ]]    && echo -n "xattrs "
     echo
 
-    read -p "Start backup now (y/n)? " confirm; echo
+    read -p "Create snapshot now (y/n)? " confirm; echo
 
     [[ $confirm == [Yy] || $confirm == [Yy]es ]] || exit;
 fi
 
 # No file should have been changed up to this point.
 
-mkdir "$dest_dir" 2>/dev/null || error "could not create backup directory."
+mkdir "$dest_dir" 2>/dev/null || error "could not create snapshot directory."
 do_rsync                      || error "rsync failed."
 
-echo "Backup completed."
+echo "Snapshot completed."
 
 echo -n "$snapshot_id" > "$archive_dir"/latest-snapshot ||
     warning "could not write to '$archive_dir/latest-snapshot'."
