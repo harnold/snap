@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# snap: a simple backup tool
+# snap - a simple backup tool
 #
 # Copyright 2010, 2011 Holger Arnold.
 #
@@ -11,7 +11,7 @@
 shopt -s extglob
 
 prg=$(basename "$0")
-ver=0.3.2
+ver=0.3.3
 
 rsync=/usr/bin/rsync
 rsync_default_opts=("--archive")
@@ -52,7 +52,7 @@ Options:
   -V, --version                print version information
   -h, --help                   show this help
 
-See the $prg manual for full documentation.
+See the $prg man page for full documentation.
 EOF
 }
 
