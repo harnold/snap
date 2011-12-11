@@ -1,0 +1,52 @@
+
+               snap - a simple backup tool based on rsync
+
+Overview
+
+    With Snap you can create incremental snapshots of directory trees.
+    Every snapshot taken by Snap is a full copy of the source directory,
+    which can be explored and restored using normal file commands.  To
+    save time and disk space, Snap uses hard links to store files that
+    have not changed between subsequent backups.
+
+Installation
+
+    Snap needs somewhat recent versions of Bash and rsync installed.
+    It has only been tested on Linux, but it should run on most
+    Unix-like operating systems.
+
+    You can run Snap from any directory.  If you want to make it
+    available for all users, execute the following commands as root or
+    using sudo:
+
+        install snap /usr/local/bin
+        install -m 644 snap.1 /usr/local/man/man1
+
+Usage
+
+    To display a short help, type "snap --help".  For full documentation
+    see the snap man page, which is also available at
+
+        http://harnold.org/software/snap/man/
+
+Home Page
+
+    Project news, documentation, and the latest release of Snap can be
+    found at
+
+        http://harnold.org/software/snap/
+
+Contributing
+
+    The development repository of Snap is available at
+
+        http://github.com/harnold/snap/
+
+    Bug reports and patches are welcome.  See the Snap home page for
+    contact details.
+
+License
+
+    Snap may be modified and redistributed under the terms of the GNU
+    General Public License, version 2.  See the accompanying LICENSE
+    file for details.
