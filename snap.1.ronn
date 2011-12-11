@@ -1,0 +1,221 @@
+# snap(1) -- a simple backup tool based on rsync
+
+## SYNOPSIS
+
+`snap` [_option_...] _source_ _archive_
+`snap` [_option_...] _profile_
+
+When the second form is used, `snap` reads its configuration from the file
+_profile.conf_, which must be stored in one of the configuration directories.
+See the [PROFILES][] section for details.
+
+## DESCRIPTION
+
+With `snap` you can create incremental snapshots of directory trees.  Running
+`snap` creates a full copy of _source_ in _archive_/_data_-_time_, with _date_
+and _time_ being the date and time of the moment when the snapshot was taken.
+The snapshots are completely transparent and can be explored and restored
+using normal file commands.  To save time and disk space, `snap` uses hard
+links to store files that have not changed between subsequent snapshots stored
+in the same _archive_.
+
+When running `snap`, you must specify at least a _source_ directory and an
+_archive_ directory.  Additionally, you can specify files and directories that
+are to be excluded from the backup.  By default, `snap` preserves symbolic
+links, permissions, modification times, and ownership information.
+Optionally, `snap` can also preserve hard links, access control lists, and
+extended attributes.
+
+`snap` uses `rsync`(1) for its operation.
+
+## OPTIONS
+
+  * `-x` _pattern_, `--exclude`=_pattern_:
+    Exclude files and directories matching _pattern_ from the snapshot.  See
+    the section on exclude patterns in the rsync(1) manual for details on the
+    pattern syntax.
+
+  * `-l` _dir_, `--link`=_dir_:
+    Link to files in _dir_ when they are unchanged.  Before a file is copied,
+    `snap` tests whether one of the directories specified using this option
+    contains a file with identical name, relative path, attributes, and
+    contents.  If it finds such a file, `snap` creates a hard link to this
+    file instead of an actual copy.  This works only if _dir_ is in the same
+    file system as _archive_ and if this file system supports hard links.
+
+    Without this option, `snap` tries to link to the latest successful
+    snapshot in the _archive_ directory, unless you specify the `--full-copy`
+    option.
+
+  * `-f`, `--full-copy`:
+    Create a full (non-incremental) copy of the source directory.  With this
+    option, `snap` does not try to link to a previous snapshot in _archive_.
+    It is still possible to create links using the `--link` option.
+
+  * `-c`, `--checksum`:
+    Compute checksums to find changed files.  By default, `snap` determines
+    whether a file has changed since the last snapshot by comparing file sizes
+    and modification times, which should be safe in normal cases.  With this
+    option, `snap` computes a checksum for each file, which is safer, but
+    significantly slows down the creation of a snapshot.
+
+  * `-H`, `--hardlinks`:
+    Preserve hard links in the backup.  With this option, `snap` hard-links
+    files that are hard-linked in the source directory also in the archive
+    directory.  This option is disabled by default because finding hard-linked
+    files can be an expensive operation.  See the rsync(1) manual for details
+    on this option.
+
+  * `-A`, `--acls`:
+    Preserve access control lists in the backup.  See the rsync(1) manual for
+    details on this option.
+
+  * `-X`, `--xattr`:
+    Preserve extended attributes in the backup.  See the rsync(1) manual for
+    details on this option.
+
+  * `-v`, `--verbose`:
+    Print information about transferred files.
+
+  * `-i`, `--interactive`:
+    Ask for confirmation before creating the snapshot.  This is the default
+    when the complete configuration is specified on the command-line.
+
+  * `-n`, `--non-interactive`:
+    Do not ask for confirmation before creating the snapshot.  This is the
+    default when part of the configuration is read from a file.
+
+  * `-V`, `--version`:
+    Print version information and exit.
+
+  * `-h`, `--help`:
+    Show usage information and exit.
+
+## PROFILES
+
+If you create regular snapshots, it is convenient to store the configuration
+in a file.  Such a predefined configuration is called a _profile_ and must be
+stored in a file with extension '_.conf_'.
+
+`snap` searches for system-wide profiles in _/etc/snap_ and for user profiles
+in _$HOME/$XDG\_USER\_DIR/snap_ (which defaults to _$HOME/.config/snap_ when
+_XDG\_USER\_DIR_ is not set).  A user profile takes precedence over a
+system-wide profile of the same name.  The options specified in the profile
+are combined with the options specified on the command line.
+
+Configuration files are read line-by-line.  Empty lines and lines starting
+with '#' are ignored.  All other lines must contain one of the following
+elements:
+
+  * `Source`=_source_':
+    Defines a source path.  This element is equivalent to the _source_
+    command-line argument.
+
+  * `Archive`=_archive_:
+    Defines an archive path.  This element is equivalent to the _archive_
+    command-line argument.
+
+  * `Exclude`=_pattern_:
+    Adds an exclude pattern.  This element is equivalent to the `--exclude`
+    command-line option.  Note that patterns must not be quoted in
+    configuration files.
+
+  * `Link`=_dir_:
+    Adds a link directory.  This element is equivalent to the `--link`
+    command-line option.
+
+  * `Options`=(`full-copy`|`checksum`|`hardlinks`|`acls`|`xattrs`) ...:
+    Sets some options.  Each option is equivalent to the command-line option
+    of the same name.  The options must be separated by commas or spaces.
+
+The case of the keywords left to the '=' is not significant; additional spaces
+around keywords and values are ignored.  A configuration file must contain
+exactly one `Source` element and exactly one `Archive` element.
+
+## EXIT STATUS
+
+  * _0_:
+  Success
+
+  * _1_:
+  Failure
+
+## ENVIRONMENT
+
+  * _HOME_:
+    Used to locate user profiles.
+
+  * _XDG\_USER\_DIR_:
+    Used to locate user profiles.  When _XDG\_USER\_DIR_ is not set, `snap`
+    assumes its default value _$HOME/.config_.
+
+## FILES
+
+`snap` searches for profiles in the following locations:
+
+  * _/etc/snap_:
+    The location for system-wide profiles.
+
+  * _$HOME/$XDG\_USER\_DIR/snap_:
+    The location for user profiles.  When _XDG\_USER\_DIR_ is not set, `snap`
+    searches for user profiles in _$HOME/.config/snap_.
+
+## NOTES
+
+If _source_ contains no trailing slash, `snap` copies the _source_ directory,
+including the last part of the _source_ path.  If _source_ contains a trailing
+slash, `snap` copies the _contents_ of the _source_ directories, excluding the
+last part of the _source_ path.
+
+## LIMITATIONS
+
+The file system that contains the _archive_ directory must support hard links
+for `snap` to be able to store subsequent snapshots efficiently.  Without hard
+links, `snap` has to perform an actual copy of _all_ files --- even the
+unmodified ones --- from the source directory.  This can require much more
+time and disk space than on a file system which supports hard links.
+
+`snap` preserves only those file attributes that are supported by the file
+system containing the _archive_ directory.  Therefore it is not a good idea to
+make a backup of an Ext4 file system on a FAT-formatted USB disk (but using
+FAT is not a good idea anyway).
+
+Although rsync(1) is able to copy directly between remote locations, the
+current version of `snap` requires _source_ and _archive_ to be mounted
+directories.
+
+## EXAMPLE
+
+The following command creates a snapshot of the home directory of user _alice_
+in _/mnt/backup/alice_.  Files in _.cache_, _.thumbnails_, and the Firefox and
+Thunderbird caches are excluded from the backup; extended file attributes as
+well as ACLs are preserved:
+
+    snap --exclude="/.cache/" \
+         --exclude="/.thumbnails/" \
+         --exclude="/.mozilla/firefox/*/Cache/" \
+         --exclude="/.thunderbird/*/Cache/"
+         --xattrs --acls \
+         /home/alice \
+         /mnt/backup/alice
+
+To store this setup in a profile, create a file _alice.conf_ which contains
+the following lines:
+
+    Source  = /home/alice
+    Archive = /mnt/backup/alice
+    Exclude = /.cache/
+    Exclude = /.thumbnails/
+    Exclude = /.mozilla/firefox/*/Cache/
+    Exclude = /.thunderbird/*/Cache/
+    Options = xattrs acls
+
+Copy this file to _/home/alice/.config/snap_ (if you are user _alice_) or to
+_/etc/snap_ (if you are the system administrator).  The following command then
+creates a backup using the profile _alice_:
+
+    snap alice
+
+## SEE ALSO
+
+`rsync`(1)
