@@ -16,7 +16,7 @@ Installation
     Unix-like operating systems.
 
     You can run Snap from any directory.  If you want to make it
-    available for all users, execute the following commands as root or
+    available to all users, execute the following commands as root or
     using sudo:
 
         install snap /usr/local/bin

@@ -1,8 +1,8 @@
-# snap(1) -- a simple backup tool based on rsync
+# snap(1) - a simple backup tool based on rsync
 
 ## SYNOPSIS
 
-`snap` [_option_...] _source_ _archive_
+`snap` [_option_...] _source_ _archive_ <br>
 `snap` [_option_...] _profile_
 
 When the second form is used, `snap` reads its configuration from the file
@@ -12,7 +12,7 @@ See the [PROFILES][] section for details.
 ## DESCRIPTION
 
 With `snap` you can create incremental snapshots of directory trees.  Running
-`snap` creates a full copy of _source_ in _archive_/_data_-_time_, with _date_
+`snap` creates a full copy of _source_ in _archive_/_date_-_time_, with _date_
 and _time_ being the date and time of the moment when the snapshot was taken.
 The snapshots are completely transparent and can be explored and restored
 using normal file commands.  To save time and disk space, `snap` uses hard
@@ -23,10 +23,10 @@ When running `snap`, you must specify at least a _source_ directory and an
 _archive_ directory.  Additionally, you can specify files and directories that
 are to be excluded from the backup.  By default, `snap` preserves symbolic
 links, permissions, modification times, and ownership information.
-Optionally, `snap` can also preserve hard links, access control lists, and
+Optionally, it can also preserve hard links, access control lists, and
 extended attributes.
 
-`snap` uses `rsync`(1) for its operation.
+`snap` uses rsync(1) for its operation.
 
 ## OPTIONS
 
@@ -95,7 +95,7 @@ extended attributes.
 
 If you create regular snapshots, it is convenient to store the configuration
 in a file.  Such a predefined configuration is called a _profile_ and must be
-stored in a file with extension '_.conf_'.
+stored in a file with extension _.conf_.
 
 `snap` searches for system-wide profiles in _/etc/snap_ and for user profiles
 in _$HOME/$XDG\_USER\_DIR/snap_ (which defaults to _$HOME/.config/snap_ when
@@ -104,10 +104,10 @@ system-wide profile of the same name.  The options specified in the profile
 are combined with the options specified on the command line.
 
 Configuration files are read line-by-line.  Empty lines and lines starting
-with '#' are ignored.  All other lines must contain one of the following
+with `#` are ignored.  All other lines must contain one of the following
 elements:
 
-  * `Source`=_source_':
+  * `Source`=_source_:
     Defines a source path.  This element is equivalent to the _source_
     command-line argument.
 
@@ -128,7 +128,7 @@ elements:
     Sets some options.  Each option is equivalent to the command-line option
     of the same name.  The options must be separated by commas or spaces.
 
-The case of the keywords left to the '=' is not significant; additional spaces
+The case of the keywords left to the `=` is not significant; additional spaces
 around keywords and values are ignored.  A configuration file must contain
 exactly one `Source` element and exactly one `Archive` element.
 
@@ -162,10 +162,9 @@ exactly one `Source` element and exactly one `Archive` element.
 
 ## NOTES
 
-If _source_ contains no trailing slash, `snap` copies the _source_ directory,
-including the last part of the _source_ path.  If _source_ contains a trailing
-slash, `snap` copies the _contents_ of the _source_ directories, excluding the
-last part of the _source_ path.
+If _source_ ends with a slash, `snap` copies only the contents of the source
+directory, excluding the last part of the source path.  Otherwise, `snap`
+copies the source directory, including the last part of the source path.
 
 ## LIMITATIONS
 
@@ -194,7 +193,7 @@ well as ACLs are preserved:
     snap --exclude="/.cache/" \
          --exclude="/.thumbnails/" \
          --exclude="/.mozilla/firefox/*/Cache/" \
-         --exclude="/.thunderbird/*/Cache/"
+         --exclude="/.thunderbird/*/Cache/" \
          --xattrs --acls \
          /home/alice \
          /mnt/backup/alice
@@ -218,4 +217,4 @@ creates a backup using the profile _alice_:
 
 ## SEE ALSO
 
-`rsync`(1)
+rsync(1)
