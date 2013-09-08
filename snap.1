@@ -1,0 +1,195 @@
+.TH "SNAP" "1" "July 2012" "Snap 0.3.3" "Snap Manual"
+.
+.SH "NAME"
+\fBsnap\fR \- a simple backup tool based on rsync
+.
+.SH "SYNOPSIS"
+\fBsnap\fR [\fIoption\fR\.\.\.] \fIsource\fR \fIarchive\fR
+.
+.br
+\fBsnap\fR [\fIoption\fR\.\.\.] \fIprofile\fR
+.
+.P
+When the second form is used, \fBsnap\fR reads its configuration from the file \fIprofile\.conf\fR, which must be stored in one of the configuration directories\. See the \fIPROFILES\fR section for details\.
+.
+.SH "DESCRIPTION"
+With \fBsnap\fR you can create incremental snapshots of directory trees\. Running \fBsnap\fR creates a full copy of \fIsource\fR in \fIarchive\fR/\fIdate\fR\-\fItime\fR, with \fIdate\fR and \fItime\fR being the date and time of the moment when the snapshot was taken\. The snapshots are completely transparent and can be explored and restored using normal file commands\. To save time and disk space, \fBsnap\fR uses hard links to store files that have not changed between subsequent snapshots stored in the same \fIarchive\fR\.
+.
+.P
+When running \fBsnap\fR, you must specify at least a \fIsource\fR directory and an \fIarchive\fR directory\. Additionally, you can specify files and directories that are to be excluded from the backup\. By default, \fBsnap\fR preserves symbolic links, permissions, modification times, and ownership information\. Optionally, it can also preserve hard links, access control lists, and extended attributes\.
+.
+.P
+\fBsnap\fR uses rsync(1) for its operation\.
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-x\fR \fIpattern\fR, \fB\-\-exclude\fR=\fIpattern\fR
+Exclude files and directories matching \fIpattern\fR from the snapshot\. See the section on exclude patterns in the rsync(1) manual for details on the pattern syntax\.
+.
+.TP
+\fB\-l\fR \fIdir\fR, \fB\-\-link\fR=\fIdir\fR
+Link to files in \fIdir\fR when they are unchanged\. Before a file is copied, \fBsnap\fR tests whether one of the directories specified using this option contains a file with identical name, relative path, attributes, and contents\. If it finds such a file, \fBsnap\fR creates a hard link to this file instead of an actual copy\. This works only if \fIdir\fR is in the same file system as \fIarchive\fR and if this file system supports hard links\.
+.
+.IP
+Without this option, \fBsnap\fR tries to link to the latest successful snapshot in the \fIarchive\fR directory, unless you specify the \fB\-\-full\-copy\fR option\.
+.
+.TP
+\fB\-f\fR, \fB\-\-full\-copy\fR
+Create a full (non\-incremental) copy of the source directory\. With this option, \fBsnap\fR does not try to link to a previous snapshot in \fIarchive\fR\. It is still possible to create links using the \fB\-\-link\fR option\.
+.
+.TP
+\fB\-c\fR, \fB\-\-checksum\fR
+Compute checksums to find changed files\. By default, \fBsnap\fR determines whether a file has changed since the last snapshot by comparing file sizes and modification times, which should be safe in normal cases\. With this option, \fBsnap\fR computes a checksum for each file, which is safer, but significantly slows down the creation of a snapshot\.
+.
+.TP
+\fB\-H\fR, \fB\-\-hardlinks\fR
+Preserve hard links in the backup\. With this option, \fBsnap\fR hard\-links files that are hard\-linked in the source directory also in the archive directory\. This option is disabled by default because finding hard\-linked files can be an expensive operation\. See the rsync(1) manual for details on this option\.
+.
+.TP
+\fB\-A\fR, \fB\-\-acls\fR
+Preserve access control lists in the backup\. See the rsync(1) manual for details on this option\.
+.
+.TP
+\fB\-X\fR, \fB\-\-xattr\fR
+Preserve extended attributes in the backup\. See the rsync(1) manual for details on this option\.
+.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Print information about transferred files\.
+.
+.TP
+\fB\-i\fR, \fB\-\-interactive\fR
+Ask for confirmation before creating the snapshot\. This is the default when the complete configuration is specified on the command\-line\.
+.
+.TP
+\fB\-n\fR, \fB\-\-non\-interactive\fR
+Do not ask for confirmation before creating the snapshot\. This is the default when part of the configuration is read from a file\.
+.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version information and exit\.
+.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show usage information and exit\.
+.
+.SH "PROFILES"
+If you create regular snapshots, it is convenient to store the configuration in a file\. Such a predefined configuration is called a \fIprofile\fR and must be stored in a file with extension \fI\.conf\fR\.
+.
+.P
+\fBsnap\fR searches for system\-wide profiles in \fI/etc/snap\fR and for user profiles in \fI$HOME/$XDG_USER_DIR/snap\fR (which defaults to \fI$HOME/\.config/snap\fR when \fIXDG_USER_DIR\fR is not set)\. A user profile takes precedence over a system\-wide profile of the same name\. The options specified in the profile are combined with the options specified on the command line\.
+.
+.P
+Configuration files are read line\-by\-line\. Empty lines and lines starting with \fB#\fR are ignored\. All other lines must contain one of the following elements:
+.
+.TP
+\fBSource\fR=\fIsource\fR
+Defines a source path\. This element is equivalent to the \fIsource\fR command\-line argument\.
+.
+.TP
+\fBArchive\fR=\fIarchive\fR
+Defines an archive path\. This element is equivalent to the \fIarchive\fR command\-line argument\.
+.
+.TP
+\fBExclude\fR=\fIpattern\fR
+Adds an exclude pattern\. This element is equivalent to the \fB\-\-exclude\fR command\-line option\. Note that patterns must not be quoted in configuration files\.
+.
+.TP
+\fBLink\fR=\fIdir\fR
+Adds a link directory\. This element is equivalent to the \fB\-\-link\fR command\-line option\.
+.
+.TP
+\fBOptions\fR=(\fBfull\-copy\fR|\fBchecksum\fR|\fBhardlinks\fR|\fBacls\fR|\fBxattrs\fR) \.\.\.
+Sets some options\. Each option is equivalent to the command\-line option of the same name\. The options must be separated by commas or spaces\.
+.
+.P
+The case of the keywords left to the \fB=\fR is not significant; additional spaces around keywords and values are ignored\. A configuration file must contain exactly one \fBSource\fR element and exactly one \fBArchive\fR element\.
+.
+.SH "EXIT STATUS"
+.
+.TP
+\fI0\fR
+Success
+.
+.TP
+\fI1\fR
+Failure
+.
+.SH "ENVIRONMENT"
+.
+.TP
+\fIHOME\fR
+Used to locate user profiles\.
+.
+.TP
+\fIXDG_USER_DIR\fR
+Used to locate user profiles\. When \fIXDG_USER_DIR\fR is not set, \fBsnap\fR assumes its default value \fI$HOME/\.config\fR\.
+.
+.SH "FILES"
+\fBsnap\fR searches for profiles in the following locations:
+.
+.TP
+\fI/etc/snap\fR
+The location for system\-wide profiles\.
+.
+.TP
+\fI$HOME/$XDG_USER_DIR/snap\fR
+The location for user profiles\. When \fIXDG_USER_DIR\fR is not set, \fBsnap\fR searches for user profiles in \fI$HOME/\.config/snap\fR\.
+.
+.SH "NOTES"
+If \fIsource\fR ends with a slash, \fBsnap\fR copies only the contents of the source directory, excluding the last part of the source path\. Otherwise, \fBsnap\fR copies the source directory, including the last part of the source path\.
+.
+.SH "LIMITATIONS"
+The file system that contains the \fIarchive\fR directory must support hard links for \fBsnap\fR to be able to store subsequent snapshots efficiently\. Without hard links, \fBsnap\fR has to perform an actual copy of \fIall\fR files \-\-\- even the unmodified ones \-\-\- from the source directory\. This can require much more time and disk space than on a file system which supports hard links\.
+.
+.P
+\fBsnap\fR preserves only those file attributes that are supported by the file system containing the \fIarchive\fR directory\. Therefore it is not a good idea to make a backup of an Ext4 file system on a FAT\-formatted USB disk (but using FAT is not a good idea anyway)\.
+.
+.P
+Although rsync(1) is able to copy directly between remote locations, the current version of \fBsnap\fR requires \fIsource\fR and \fIarchive\fR to be mounted directories\.
+.
+.SH "EXAMPLE"
+The following command creates a snapshot of the home directory of user \fIalice\fR in \fI/mnt/backup/alice\fR\. Files in \fI\.cache\fR, \fI\.thumbnails\fR, and the Firefox and Thunderbird caches are excluded from the backup; extended file attributes as well as ACLs are preserved:
+.
+.P
+.RS 4
+.nf
+\f(CWsnap \-\-exclude="/\.cache/" \e\fP
+\f(CW     \-\-exclude="/\.thumbnails/" \e\fP
+\f(CW     \-\-exclude="/\.mozilla/firefox/*/Cache/" \e\fP
+\f(CW     \-\-exclude="/\.thunderbird/*/Cache/" \e\fP
+\f(CW     \-\-xattrs \-\-acls \e\fP
+\f(CW     /home/alice \e\fP
+\f(CW     /mnt/backup/alice\fP
+.fi
+.RE
+.
+.P
+To store this setup in a profile, create a file \fIalice\.conf\fR which contains the following lines:
+.
+.P
+.RS 4
+.nf
+\f(CWSource  = /home/alice\fP
+\f(CWArchive = /mnt/backup/alice\fP
+\f(CWExclude = /\.cache/\fP
+\f(CWExclude = /\.thumbnails/\fP
+\f(CWExclude = /\.mozilla/firefox/*/Cache/\fP
+\f(CWExclude = /\.thunderbird/*/Cache/\fP
+\f(CWOptions = xattrs acls\fP
+.fi
+.RE
+.
+.P
+Copy this file to \fI/home/alice/\.config/snap\fR (if you are user \fIalice\fR) or to \fI/etc/snap\fR (if you are the system administrator)\. The following command then creates a backup using the profile \fIalice\fR:
+.
+.P
+.RS 4
+.nf
+\f(CWsnap alice\fP
+.fi
+.RE
+.
+.SH "SEE ALSO"
+rsync(1)
