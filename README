@@ -15,8 +15,9 @@ Installation
     It has only been tested on Linux, but it should run on most Unix-
     like operating systems.
 
-    You can run snap from any directory.  If you want to make it
-    available to all users, execute the following commands as root or
+    You can run snap from any directory.  To make the program available
+    to all users, either use the provided Makefile or install the files
+    manually, for example by executing the following commands as root or
     using sudo:
 
         install snap /usr/local/bin
@@ -25,14 +26,13 @@ Installation
 Usage
 
     To display a short help, type "snap --help".  For full documentation
-    see the snap man page.
+    consult the snap man page.
 
 Home Page
 
-    Project news, documentation, and the latest release of snap can be
-    found at
+    The latest release of snap can be found at
 
-        http://harnold.org/software/snap/
+        http://harnold.org/software/
 
 Contributing
 
@@ -40,8 +40,8 @@ Contributing
 
         http://github.com/harnold/snap/
 
-    Bug reports and patches are welcome.  See the snap home page for
-    contact details.
+    Bug reports and patches are welcome.  See the home page for contact
+    details.
 
 License
 
