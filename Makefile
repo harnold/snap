@@ -16,6 +16,10 @@ install: $(name).1
 	$(INSTALL_DIR) $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL) $(name).1 $(DESTDIR)$(MANDIR)/man1
 
+uninstall:
+	rm -f $(DESTDIR)$(BINDIR)/$(name)
+	rm -f $(DESTDIR)$(MANDIR)/man1/$(name).1
+
 doc: $(name).1 $(name).html
 
 $(name).html: $(name).1.ronn
