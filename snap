@@ -2,7 +2,7 @@
 
 # snap - a simple backup tool
 #
-# Copyright 2010, 2011 Holger Arnold.
+# Copyright 2010, 2011, 2013 Holger Arnold.
 #
 # This program may be modified and redistributed under the terms of the
 # GNU General Public License, version 2.  See the accompanying LICENSE
@@ -327,3 +327,8 @@ echo "Snapshot completed."
 
 echo -n "$snapshot_id" > "$archive_dir"/latest-snapshot ||
     warning "could not write to '$archive_dir/latest-snapshot'."
+
+if [[ $full_copy = 1 ]]; then
+    echo -n "$snapshot_id" > "$archive_dir"/latest-full-snapshot ||
+        warning "could not write to '$archive_dir/latest-full-snapshot'."
+fi
